@@ -1,5 +1,6 @@
 package ci553.happyshop.client.customer;
 
+import ci553.happyshop.utility.TrolleyUtils;
 import ci553.happyshop.catalogue.Order;
 import ci553.happyshop.catalogue.Product;
 import ci553.happyshop.storageAccess.DatabaseRW;
@@ -63,23 +64,35 @@ public class CustomerModel {
     }
 
     void addToTrolley(){
-        if(theProduct!= null){
+        if(theProduct != null){
 
-            // trolley.add(theProduct) — Product is appended to the end of the trolley.
-            // To keep the trolley organized, add code here or call a method that:
-            //TODO
-            // 1. Merges items with the same product ID (combining their quantities).
-            // 2. Sorts the products in the trolley by product ID.
-            trolley.add(theProduct);
-            displayTaTrolley = ProductListFormatter.buildString(trolley); //build a String for trolley so that we can show it
+            // Create a fresh Product each time so quantity increases by +1 (not doubling)
+            Product itemToAdd = new Product(
+                    theProduct.getProductId(),
+                    theProduct.getProductDescription(),
+                    theProduct.getProductImageName(),
+                    theProduct.getUnitPrice(),
+                    theProduct.getStockQuantity()
+            );
+            itemToAdd.setOrderedQuantity(1);
+            trolley.add(itemToAdd);
+
+            trolley = new ArrayList<>(
+                    TrolleyUtils.mergeAndSortTrolley(trolley)
+            );
+
+            displayTaTrolley = ProductListFormatter.buildString(trolley);
         }
         else{
             displayLaSearchResult = "Please search for an available product before adding it to the trolley";
             System.out.println("must search and get an available product before add to trolley");
         }
+
         displayTaReceipt=""; // Clear receipt to switch back to trolleyPage (receipt shows only when not empty)
         updateView();
     }
+
+
 
     void checkOut() throws IOException, SQLException {
         if(!trolley.isEmpty()){
