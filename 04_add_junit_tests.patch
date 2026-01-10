@@ -1,0 +1,84 @@
+diff -ruN /mnt/data/_orig_clean2/src/test/java/ci553/happyshop/utility/PricingCalculatorTest.java /mnt/data/_improved_clean2/src/test/java/ci553/happyshop/utility/PricingCalculatorTest.java
+--- /mnt/data/_orig_clean2/src/test/java/ci553/happyshop/utility/PricingCalculatorTest.java	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/_improved_clean2/src/test/java/ci553/happyshop/utility/PricingCalculatorTest.java	2026-01-10 12:58:42.000000000 +0000
+@@ -0,0 +1,30 @@
++package ci553.happyshop.utility;
++
++import ci553.happyshop.catalogue.Product;
++import org.junit.jupiter.api.Test;
++
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class PricingCalculatorTest {
++
++    @Test
++    void subtotal_multipliesUnitPriceByOrderedQuantity() {
++        Product p1 = new Product("0001","A", "a.jpg", 1.50, 10);
++        p1.setOrderedQuantity(2);
++        Product p2 = new Product("0002","B", "b.jpg", 2.00, 10);
++        p2.setOrderedQuantity(3);
++
++        double subtotal = PricingCalculator.subtotal(List.of(p1,p2));
++        assertEquals(1.50*2 + 2.00*3, subtotal, 0.0001);
++    }
++
++    @Test
++    void subtotal_ignoresNegativeQuantity() {
++        Product p1 = new Product("0001","A", "a.jpg", 1.50, 10);
++        p1.setOrderedQuantity(-5);
++
++        assertEquals(0.0, PricingCalculator.subtotal(List.of(p1)), 0.0001);
++    }
++}
+
+diff -ruN /mnt/data/_orig_clean2/src/test/java/ci553/happyshop/utility/TrolleyUtilsTest.java /mnt/data/_improved_clean2/src/test/java/ci553/happyshop/utility/TrolleyUtilsTest.java
+--- /mnt/data/_orig_clean2/src/test/java/ci553/happyshop/utility/TrolleyUtilsTest.java	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/_improved_clean2/src/test/java/ci553/happyshop/utility/TrolleyUtilsTest.java	2026-01-10 12:58:42.000000000 +0000
+@@ -0,0 +1,45 @@
++package ci553.happyshop.utility;
++
++import ci553.happyshop.catalogue.Product;
++import org.junit.jupiter.api.Test;
++
++import java.util.ArrayList;
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class TrolleyUtilsTest {
++
++    @Test
++    void mergeAndSortById_mergesQuantitiesAndSorts() {
++        Product p1 = new Product("0002","B", "b.jpg", 2.0, 10);
++        p1.setOrderedQuantity(1);
++        Product p2 = new Product("0001","A", "a.jpg", 1.0, 10);
++        p2.setOrderedQuantity(2);
++        Product p3 = new Product("0002","B", "b.jpg", 2.0, 10);
++        p3.setOrderedQuantity(3);
++
++        ArrayList<Product> merged = TrolleyUtils.mergeAndSortById(List.of(p1,p2,p3));
++
++        assertEquals(2, merged.size());
++        assertEquals("0001", merged.get(0).getProductId());
++        assertEquals(2, merged.get(0).getOrderedQuantity());
++        assertEquals("0002", merged.get(1).getProductId());
++        assertEquals(4, merged.get(1).getOrderedQuantity());
++    }
++
++    @Test
++    void removeInsufficientById_removesMatchingIds() {
++        Product ok = new Product("0001","A", "a.jpg", 1.0, 10);
++        ok.setOrderedQuantity(1);
++        Product bad = new Product("0002","B", "b.jpg", 2.0, 10);
++        bad.setOrderedQuantity(1);
++
++        Product insufficient = new Product("0002","B", "b.jpg", 2.0, 0);
++        insufficient.setOrderedQuantity(5);
++
++        ArrayList<Product> kept = TrolleyUtils.removeInsufficientById(List.of(ok,bad), List.of(insufficient));
++        assertEquals(1, kept.size());
++        assertEquals("0001", kept.get(0).getProductId());
++    }
++}

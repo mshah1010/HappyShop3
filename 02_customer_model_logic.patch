@@ -1,0 +1,108 @@
+diff -ruN /mnt/data/_orig_clean2/src/main/java/ci553/happyshop/client/customer/CustomerModel.java /mnt/data/_improved_clean2/src/main/java/ci553/happyshop/client/customer/CustomerModel.java
+--- /mnt/data/_orig_clean2/src/main/java/ci553/happyshop/client/customer/CustomerModel.java	2025-11-26 14:13:27.000000000 +0000
++++ /mnt/data/_improved_clean2/src/main/java/ci553/happyshop/client/customer/CustomerModel.java	2026-01-10 12:58:02.000000000 +0000
+@@ -6,6 +6,8 @@
+ import ci553.happyshop.orderManagement.OrderHub;
+ import ci553.happyshop.utility.StorageLocation;
+ import ci553.happyshop.utility.ProductListFormatter;
++import ci553.happyshop.utility.TrolleyUtils;
++import ci553.happyshop.utility.PricingCalculator;
+ 
+ import java.io.IOException;
+ import java.nio.file.Path;
+@@ -25,6 +27,9 @@
+     public DatabaseRW databaseRW; //Interface type, not specific implementation
+                                   //Benefits: Flexibility: Easily change the database implementation.
+ 
++    // Optional notifier window used to inform the customer when items are removed during checkout.
++    public RemoveProductNotifier removeProductNotifier;lexibility: Easily change the database implementation.
++
+     private Product theProduct =null; // product found from search
+     private ArrayList<Product> trolley =  new ArrayList<>(); // a list of products in trolley
+ 
+@@ -63,21 +68,30 @@
+     }
+ 
+     void addToTrolley(){
+-        if(theProduct!= null){
++        if (theProduct != null) {
+ 
+-            // trolley.add(theProduct) — Product is appended to the end of the trolley.
+-            // To keep the trolley organized, add code here or call a method that:
+-            //TODO
+-            // 1. Merges items with the same product ID (combining their quantities).
+-            // 2. Sorts the products in the trolley by product ID.
+-            trolley.add(theProduct);
+-            displayTaTrolley = ProductListFormatter.buildString(trolley); //build a String for trolley so that we can show it
+-        }
+-        else{
++            // Create a trolley item with a default ordered quantity of 1
++            Product item = new Product(
++                    theProduct.getProductId(),
++                    theProduct.getProductDescription(),
++                    theProduct.getProductImageName(),
++                    theProduct.getUnitPrice(),
++                    theProduct.getStockQuantity()
++            );
++            item.setOrderedQuantity(1);
++
++            trolley.add(item);
++
++            // Merge duplicates and keep trolley sorted by product id
++            trolley = TrolleyUtils.mergeAndSortById(trolley);
++            displayTaTrolley = ProductListFormatter.buildString(trolley);
++
++        } else {
+             displayLaSearchResult = "Please search for an available product before adding it to the trolley";
+             System.out.println("must search and get an available product before add to trolley");
+         }
+-        displayTaReceipt=""; // Clear receipt to switch back to trolleyPage (receipt shows only when not empty)
++
++        displayTaReceipt = ""; // Clear receipt to switch back to trolleyPage
+         updateView();
+     }
+ 
+@@ -98,12 +112,15 @@
+                 trolley.clear();
+                 displayTaTrolley ="";
+                 displayTaReceipt = String.format(
+-                        "Order_ID: %s\nOrdered_Date_Time: %s\n%s",
++                        "Order_ID: %s\nOrdered_Date_Time: %s\n%s\n\nSubtotal: £%.2f",
+                         theOrder.getOrderId(),
+                         theOrder.getOrderedDateTime(),
+-                        ProductListFormatter.buildString(theOrder.getProductList())
++                        ProductListFormatter.buildString(theOrder.getProductList()),
++                        PricingCalculator.subtotal(theOrder.getProductList())
+                 );
+                 System.out.println(displayTaReceipt);
++                if (removeProductNotifier != null) { removeProductNotifier.closeNotifierWindow(); }
++
+             }
+             else{ // Some products have insufficient stock — build an error message to inform the customer
+                 StringBuilder errorMsg = new StringBuilder();
+@@ -115,13 +132,18 @@
+                 }
+                 theProduct=null;
+ 
+-                //TODO
+-                // Add the following logic here:
+-                // 1. Remove products with insufficient stock from the trolley.
+-                // 2. Trigger a message window to notify the customer about the insufficient stock, rather than directly changing displayLaSearchResult.
+-                //You can use the provided RemoveProductNotifier class and its showRemovalMsg method for this purpose.
+-                //remember close the message window where appropriate (using method closeNotifierWindow() of RemoveProductNotifier class)
+-                displayLaSearchResult = "Checkout failed due to insufficient stock for the following products:\n" + errorMsg.toString();
++                // Remove products with insufficient stock from the trolley
++                trolley = TrolleyUtils.removeInsufficientById(trolley, insufficientProducts);
++                displayTaTrolley = ProductListFormatter.buildString(trolley);
++
++                // Notify the customer using the notifier window (if available)
++                if (removeProductNotifier != null) {
++                    removeProductNotifier.showRemovalMsg(
++                            "Checkout failed due to insufficient stock for:\n" + errorMsg
++                    );
++                }
++
++displayLaSearchResult = "Checkout failed due to insufficient stock for the following products:\n" + errorMsg.toString();
+                 System.out.println("stock is not enough");
+             }
+         }

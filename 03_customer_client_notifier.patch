@@ -1,0 +1,15 @@
+diff -ruN /mnt/data/_orig_clean2/src/main/java/ci553/happyshop/client/customer/CustomerClient.java /mnt/data/_improved_clean2/src/main/java/ci553/happyshop/client/customer/CustomerClient.java
+--- /mnt/data/_orig_clean2/src/main/java/ci553/happyshop/client/customer/CustomerClient.java	2025-11-26 14:13:27.000000000 +0000
++++ /mnt/data/_improved_clean2/src/main/java/ci553/happyshop/client/customer/CustomerClient.java	2026-01-10 12:58:12.000000000 +0000
+@@ -37,8 +37,8 @@
+         cusModel.databaseRW = databaseRW;
+         cusView.start(window);
+ 
+-        //RemoveProductNotifier removeProductNotifier = new RemoveProductNotifier();
+-        //removeProductNotifier.cusView = cusView;
+-        //cusModel.removeProductNotifier = removeProductNotifier;
++        RemoveProductNotifier removeProductNotifier = new RemoveProductNotifier();
++        removeProductNotifier.cusView = cusView;
++        cusModel.removeProductNotifier = removeProductNotifier;
+     }
+ }
