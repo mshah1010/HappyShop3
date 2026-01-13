@@ -1,4 +1,5 @@
 package ci553.happyshop.client.customer;
+import java.awt.Toolkit;
 
 import ci553.happyshop.utility.UIStyle;
 import ci553.happyshop.utility.WinPosManager;
@@ -173,6 +174,7 @@ public class CustomerView  {
 
     private void buttonClicked(ActionEvent event) {
         try{
+            Toolkit.getDefaultToolkit().beep();
             Button btn = (Button)event.getSource();
             String action = btn.getText();
             if(action.equals("Add to Trolley")){
